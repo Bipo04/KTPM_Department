@@ -1,28 +1,28 @@
-const bcrypt = require('bcryptjs')
-const jwt = require('jsonwebtoken')
-const { User } = require('../db/models')
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+const { User } = require('../db/models');
 
 exports.register = async (req, res) => {
   try {
-    const { username, password } = req.body
-    const role = "user"
+    const { username, password } = req.body;
+    const role = "user";
 
     const userExists = await User.findOne({
       where: { username }
-    })
+    });
 
     if (userExists) {
       return res.status(400).json({ message: 'Tài khoản đã tồn tại' });
     }
 
-    const salt = await bcrypt.genSalt(10)
-    const hashedPassword = await bcrypt.hash(password, salt)
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
 
     const newUser = await User.create({
       username,
       password: hashedPassword,
       role
-    })
+    });
 
     res.status(201).json({
       message: 'Đăng ký thành công',
@@ -30,20 +30,20 @@ exports.register = async (req, res) => {
         id: newUser.id,
         username: newUser.username,
       }
-    })
+    });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Đăng ký thất bại!", error: error.message });
   }
-}
+};
 
 exports.login = async (req, res) => {
   try {
-    const { username, password } = req.body
+    const { username, password } = req.body;
 
     const user = await User.findOne({
       where: { username }
-    })
+    });
 
     if (!user) {
       return res.status(400).json({ message: 'Tài khoản không tồn tại' });
@@ -61,7 +61,7 @@ exports.login = async (req, res) => {
       },
       process.env.JWT_SECRET,
       { expiresIn: '1d' }
-    )
+    );
 
     res.json({
       message: 'Đăng nhập thành công',
@@ -71,9 +71,23 @@ exports.login = async (req, res) => {
         username: user.username,
         role: user.role
       }
-    })
+    });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Đăng nhập thất bại!", error: error.message });
   }
-} 
+};
+
+exports.logout = async (req, res) => {
+  try {
+    // Server không cần làm gì đặc biệt vì token được lưu ở client
+    // Client sẽ xóa token khỏi localStorage hoặc cookie
+    return res.status(200).json({ 
+      message: 'Đăng xuất thành công',
+      success: true 
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Đăng xuất thất bại!", error: error.message });
+  }
+};
